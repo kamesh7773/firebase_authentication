@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- This file is related to Facebook signIn -->
+   <string name="app_name">firebase_authentication</string>
+   <string name="facebook_app_id">990641889469194</string>
+   <string name="fb_login_protocol_scheme">fb990641889469194</string>
+   <string name="facebook_client_token">ef92babbbf84de424b3659e86e708cb6</string>
+</resources>
