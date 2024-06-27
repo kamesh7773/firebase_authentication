@@ -161,8 +161,6 @@ class FirebaseAuthMethod {
         otp: emailOTP,
       );
 
-      debugPrint(res.toString());
-
       if (context.mounted) {
         Navigator.pop(context);
       }
