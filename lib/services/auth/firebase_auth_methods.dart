@@ -1,3 +1,4 @@
+import 'package:email_otp_auth/email_otp_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -12,21 +13,12 @@ import 'package:firebase_authentication/helper/internet_checker.dart';
 import 'package:firebase_authentication/helper/progress_indicator.dart';
 import 'package:firebase_authentication/pages/auth%20pages/Email%20auth/email_otp_page.dart';
 import 'package:firebase_authentication/pages/auth%20pages/Phone%20auth/phone_otp_page.dart';
-import 'package:firebase_authentication/services/auth/email_otp_auth_methods.dart';
 import 'package:firebase_authentication/helper/firebase_auth_error_snackbar.dart';
 
 class FirebaseAuthMethod {
   // varible related Firebase instance related
   static final FirebaseAuth _auth = FirebaseAuth.instance;
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
-
-  // variable's for Email Auth
-  static late String _emailOtpHashKey;
-
-  // creating getter for _emailOtpHashKey veriable so it can be read by EmailOTP Page also
-  // (makeing EmailverficationId id getter so it can be read by phoneOTP Page so when we resend the OTP then vericationID also genrated new so we have to pass again to
-  //  OTP Page by Consturtor so if we do that again then Because we already present on OTP Page so OTP Page will again will redirected (Pop to user) and we don't wnat that)
-  static String get emailHash => _emailOtpHashKey;
 
   // variable's for Phone Auth
   static late String _phoneOtpVerficationID;
@@ -78,8 +70,7 @@ class FirebaseAuthMethod {
           //* 2nd sentOTP Method get called.
           //? Try & catch block for sending OTP to user Email Address.
           try {
-            var res = await EmailAuth.sendEmail(email: email);
-            _emailOtpHashKey = res['data'];
+            await EmailOtpAuth.sendOTP(email: email);
             // Poping out Progress Indicator
             if (context.mounted) {
               Navigator.pop(context);
@@ -156,7 +147,6 @@ class FirebaseAuthMethod {
   //! Verifying Email OTP & if OTP get succesfully get verfied then create user account on firebase and store user info on FireStore DB
   static Future<void> verifyEmailOTP({
     required email,
-    required emailOtpHash,
     required emailOTP,
     required firstName,
     required lastName,
@@ -167,11 +157,12 @@ class FirebaseAuthMethod {
     try {
       ProgressIndicators.showProgressIndicator(context);
       //! Method that verify Email OTP
-      var res = await EmailAuth.verifyOtp(
-        email: email,
-        hash: emailOtpHash,
+      var res = await EmailOtpAuth.verifyOtp(
         otp: emailOTP,
       );
+
+      debugPrint(res.toString());
+
       if (context.mounted) {
         Navigator.pop(context);
       }
@@ -254,12 +245,11 @@ class FirebaseAuthMethod {
     try {
       // Showing the progress Indicator
       ProgressIndicators.showProgressIndicator(context);
-      var res = await EmailAuth.sendEmail(email: email);
+      await EmailOtpAuth.sendOTP(email: email);
       // Poping of the Progress Indicator
       if (context.mounted) {
         Navigator.pop(context);
       }
-      _emailOtpHashKey = res['data'];
     }
     //? Handling E-mail OTP error's
     catch (error) {

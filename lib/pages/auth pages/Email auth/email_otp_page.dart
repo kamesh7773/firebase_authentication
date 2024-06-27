@@ -43,7 +43,6 @@ class EmailOtpPageOtpPageState extends State<EmailOtpPage> {
   void verifyOTP() {
     FirebaseAuthMethod.verifyEmailOTP(
       email: widget.email,
-      emailOtpHash: FirebaseAuthMethod.emailHash,
       emailOTP: _emailOtp,
       firstName: widget.firstName,
       lastName: widget.lastName,
