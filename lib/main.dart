@@ -10,7 +10,7 @@ import 'package:firebase_authentication/pages/home_page.dart';
 import 'package:firebase_authentication/pages/auth%20pages/Email%20auth/login_with_email_password.dart';
 import 'package:firebase_authentication/pages/auth%20pages/Email%20auth/sign_up_email_password.dart';
 import 'package:firebase_authentication/providers/timer_and_checkmark_provider.dart';
-import 'package:firebase_authentication/services/firebase_options.dart';                    
+import 'package:firebase_authentication/services/firebase/firebase_options.dart';                    
 import 'package:provider/provider.dart';
 
 void main() async {

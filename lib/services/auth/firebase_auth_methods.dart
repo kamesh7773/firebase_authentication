@@ -45,8 +45,7 @@ class FirebaseAuthMethod {
     try {
       // showing Progress Indigator
       ProgressIndicators.showProgressIndicator(context);
-      //* 1st We check if the entered email address already present & its provider is "Email & Password" in "users" collection
-      //* by querying FireStore's "users" Collection.
+      //* 1st We check if the entered email address is already present & its provider is "Email & Password" in the "users" collection by querying FireStore's "users" Collection.
       // searching for Email Address & "Email & Password" provider in "users" collection at once
       QuerySnapshot queryForEmailAndProvider = await _db
           .collection('users')
@@ -67,9 +66,9 @@ class FirebaseAuthMethod {
       // provider is not "Email & password" only then...
       else {
         if (context.mounted) {
-          //* 2nd sentOTP Method get called.
           //? Try & catch block for sending OTP to user Email Address.
           try {
+            //* 2nd sentOTP Method gets called.
             await EmailOtpAuth.sendOTP(email: email);
             // Poping out Progress Indicator
             if (context.mounted) {
@@ -95,12 +94,12 @@ class FirebaseAuthMethod {
             }
           }
 
-          //* 3rd after sending OTP we redirect user to Email OTP PAGE
-          //*     (we are also sending the fname , lname , userName & password to OTP Page so when verifyOTP method get called then we pass these value to verfiyOTP method because
-          //*      verifyOTP Method also responsible for storeing userForm Data in FireStore DB. You will be thinking why we are passing these information to OTP page then we again
-          //*      pass this info to verifyOTP method why taking too much hustle ? why don't we simply store userForm info into some varible and use them ? because we cannot do this
-          //*      when verfy otp method get called from OTP page then FirebaseAUthMethod called also called when we try to store user form data into varibale and when we use these
-          //*      variables then these varible only contains null values.)
+          //* 3rd after sending OTP we redirect the user to the Email OTP PAGE.
+          //*     (we are also sending the fname, lname, userName & password to the OTP Page so when the verifyOTP method gets called then we pass these values to the verifyOTP method because 
+          //*      the verifyOTP Method is also responsible for storing userForm Data in FireStore DB. You will be wondering why we are passing this information to the OTP page then we again 
+          //*      pass this info to verify the OTP method why taking too much hustle? why don't we simply store userForm info into some variable and use them? because we cannot do this when 
+          //*      the verfy otp method gets called from the OTP page FirebaseAUthMethod reinitlized and when we try to store user form data into variables and when we use these variables then 
+          //*      this variable only contains null values.)
           // storeing interent state in veriable
           bool isInternet = await InternetChecker.checkInternet();
           // if Internet connection is Not presented then..
@@ -164,7 +163,7 @@ class FirebaseAuthMethod {
       if (context.mounted) {
         Navigator.pop(context);
       }
-      //* 4th if user get verifed with Email OTP then we create thier account on Firebase Auth & Save the User Info on Fireabase Store
+      //* 4th if user get verified with Email OTP then we create their account on Firebase Auth & Save the User Info on Firebase Store.
       if (res["message"] == "OTP Verified") {
         //? Try & catch block for (creating the user account with Email-Password and storing user info at firebase auth server)
         try {
@@ -337,8 +336,7 @@ class FirebaseAuthMethod {
     try {
       // showing Progress Indigator
       ProgressIndicators.showProgressIndicator(context);
-      //* 1st We check if the entered email address already present & its provider is "Email & Password" in "users" collection
-      //* by querying FireStore's "users" Collection.
+      //* 1st We check if the entered email address is already present & its provider is "Email & Password" in the "users" collection by querying FireStore's "users" Collection.
       // searching for Email Address & "Email & Password" provider in "users" collection at once
       QuerySnapshot queryForEmailAndProvider = await _db
           .collection('users')
@@ -417,7 +415,7 @@ class FirebaseAuthMethod {
       // showing circular progress Indicator
       ProgressIndicators.showProgressIndicator(context);
 
-      //* 1st Send OTP Method get called that sends the OTP to user
+      //* 1st Send OTP Method gets called that sends the OTP to the user.
       await _auth.verifyPhoneNumber(
         // asigning textfeild Phone number to phonenumber propertie (It it very IMP to add "+" before county code)
         phoneNumber: "+$countryCode$phoneNumber",
@@ -486,14 +484,14 @@ class FirebaseAuthMethod {
       // showing circular progress Indicator
       ProgressIndicators.showProgressIndicator(context);
 
-      //* 3rd OTP verfication method get called from OTP page, (This is the method that verfiy the OTP with VerficationID)
+      //* 3rd OTP verification method get called from OTP page, (This is the method that verify the OTP with VerficationID)
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
           verificationId: verificationID, smsCode: otp);
 
-      //* 4th singIn the user with credential.
+      //* 4th singIn the user with the credential.
       await FirebaseAuth.instance.signInWithCredential(credential);
 
-      //* 5th stroing user info inside the FireStore "users" collection.
+      //* 5th storing user info inside the FireStore "users" collection.
       // ? Try & catch block for storing user info at Firestore in "users" collections
       try {
         // creating "users" collection so we can store user specific user data
@@ -547,7 +545,7 @@ class FirebaseAuthMethod {
         }
       }
 
-      //* 8th After succresfully SingIn redirecting user to HomePage
+      //* 8th After successfully SingIn redirects the user to HomePage.
       if (context.mounted) {
         Navigator.of(context).pop();
         Navigator.of(context).pushNamed("/HomePage");
@@ -604,8 +602,8 @@ class FirebaseAuthMethod {
           }
         },
 
-        //? it is very imp to set timeout to zero if are usieng "SMS User Consent API" for OTP Autofill.
-        //? otherwise application will get crashed.d
+        //? it is very imp to set timeout to zero if are using "SMS User Consent API" for OTP Autofill.
+        //? otherwise application will crashed.
         timeout: const Duration(seconds: 0),
 
         // codeSend : propertie method is sends the OTP to user device
@@ -643,18 +641,18 @@ class FirebaseAuthMethod {
       //  Index.html file ex : <meta name="google-signin-client_id" content="152173321595-lb4qla2alg7q3010hrip1p1i1ok997n9.apps.googleusercontent.com.apps.googleusercontent.com"> )
       //  Google Auth Only run on specific "Port 5000" for runing application ex : "flutter run -d edge --web-hostname localhost --web-port 5000"
       if (kIsWeb) {
-        //* 1st creating googleProvider instance with help of GoogleAuthProvider class contructor
+        //* 1st create a googleProvider instance with the help of the GoogleAuthProvider class constructor.
         GoogleAuthProvider googleProvider = GoogleAuthProvider();
 
-        //* 2nd Provider that need some kind user google acocunt info for singIn purpopse.
-        //*     There are multiple provider are there in google office web site you can check it out.
+        //* 2nd Provider needs some kind of user Google account info for the sign-in process.
+        //*     There are multiple providers are there in the google office website you can check them out.
         googleProvider.addScope("email");
 
-        //* 3rd this code pop the google signIn/signUp interface/UI like showing google id that is loged in user's browser
+        //* 3rd this code pop the google signIn/signUp interface/UI like showing google id that is logged in user's browser
         final UserCredential userCredential =
             await _auth.signInWithPopup(googleProvider);
 
-        //* 4th stroing user info inside the FireStore "users" collection.
+        //* 4th storing user info inside the FireStore "users" collection.
         // ? Try & catch block for storing user info at Firestore in "users" collections
         try {
           // creating "users" collection so we can store user specific user data
@@ -681,7 +679,7 @@ class FirebaseAuthMethod {
           // creating instace of Shared Preferences.
           final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-          //* 5th writing current User info data to SharedPreferences.
+          //* 
           await prefs.setString("name", userData!["name"]);
           await prefs.setString("userName", userData["userName"]);
           await prefs.setString("email", userData["email"]);
