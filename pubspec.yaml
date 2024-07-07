@@ -52,6 +52,8 @@ dependencies:
   shared_preferences: ^2.2.3
   # our custum email OTP auth package
   email_otp_auth: ^0.0.5
+  # for custom loading animation
+  loading_animation_widget: ^1.2.1
 
 dev_dependencies:
   flutter_test:
