@@ -126,6 +126,14 @@ class _ForgotEmailPasswordPageState extends State<ForgotEmailPasswordPage> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: true,
+      onPopInvoked: (value) {
+        if (value) {
+          //! This method is called when user press back button in middle of filling otp on OTP Page so we have cancel the current timer and disable
+          //! Resent Button again if we don't do that the timer() get overlape and timer will run very fast and resent btn will get enable even though
+          //! timer is runing.
+          context.read<TimerAndRadioButtonProvider>().resetTimerAndBtn();
+        }
+      },
       child: Scaffold(
         body: SafeArea(
           child: Form(

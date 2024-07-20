@@ -95,10 +95,10 @@ class FirebaseAuthMethod {
           }
 
           //* 3rd after sending OTP we redirect the user to the Email OTP PAGE.
-          //*     (we are also sending the fname, lname, userName & password to the OTP Page so when the verifyOTP method gets called then we pass these values to the verifyOTP method because 
-          //*      the verifyOTP Method is also responsible for storing userForm Data in FireStore DB. You will be wondering why we are passing this information to the OTP page then we again 
-          //*      pass this info to verify the OTP method why taking too much hustle? why don't we simply store userForm info into some variable and use them? because we cannot do this when 
-          //*      the verfy otp method gets called from the OTP page FirebaseAUthMethod reinitlized and when we try to store user form data into variables and when we use these variables then 
+          //*     (we are also sending the fname, lname, userName & password to the OTP Page so when the verifyOTP method gets called then we pass these values to the verifyOTP method because
+          //*      the verifyOTP Method is also responsible for storing userForm Data in FireStore DB. You will be wondering why we are passing this information to the OTP page then we again
+          //*      pass this info to verify the OTP method why taking too much hustle? why don't we simply store userForm info into some variable and use them? because we cannot do this when
+          //*      the verfy otp method gets called from the OTP page FirebaseAUthMethod reinitlized and when we try to store user form data into variables and when we use these variables then
           //*      this variable only contains null values.)
           // storeing interent state in veriable
           bool isInternet = await InternetChecker.checkInternet();
@@ -652,6 +652,10 @@ class FirebaseAuthMethod {
         final UserCredential userCredential =
             await _auth.signInWithPopup(googleProvider);
 
+        if (context.mounted) {
+          ProgressIndicators.showProgressIndicator(context);
+        }
+
         //* 4th storing user info inside the FireStore "users" collection.
         // ? Try & catch block for storing user info at Firestore in "users" collections
         try {
@@ -679,7 +683,7 @@ class FirebaseAuthMethod {
           // creating instace of Shared Preferences.
           final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-          //* 
+          //* 5th stroing user info inside the FireStore "users" collection.
           await prefs.setString("name", userData!["name"]);
           await prefs.setString("userName", userData["userName"]);
           await prefs.setString("email", userData["email"]);
@@ -707,6 +711,7 @@ class FirebaseAuthMethod {
 
         //* 7th After succresfully SingIn redirecting user to HomePage
         if (context.mounted) {
+          Navigator.of(context).pop();
           Navigator.of(context).pushNamed("/HomePage");
         }
 
@@ -723,94 +728,111 @@ class FirebaseAuthMethod {
         //* 1st this code pop the google signIn/signUp interface/UI like showing google id that is loged in user's devices
         final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-        //* 2nd When user clicks on the Pop Google Account then this code retirve the GoogleSignInTokenData (accesToken/IdToken)
-        final GoogleSignInAuthentication? googleAuth =
-            await googleUser?.authentication;
-
-        // if accessToken or idToken null the return nothing. ( accessToken get null when user dismis the Google account Pop Menu)
-        if (googleAuth?.accessToken == null && googleAuth?.idToken == null) {
-          return;
+        if (context.mounted) {
+          ProgressIndicators.showProgressIndicator(context);
         }
-        // if accessToken and idToken is not null only then we process to login
+
+        //! if user Click on the back button while Google OAUth Popup is showing or he dismis the Google OAuth Pop By clicking anywhere on the screen then this under code\
+        //! will pop-out the Progress Indicator.
+        if (googleUser == null && context.mounted) {
+          Navigator.of(context).pop();
+        }
+
+        //! if User Does Nothngs and continues to Google O Auth Sign In then this under code will executed.
         else {
-          //* 3rd In upper code (2nd code ) we are ritrieving the "GoogleSignInTokenData" Instance (googleAuth) now with the help googleAuth instance we gonna
-          //* retrive the "accessToken" and idToken
-          final credential = GoogleAuthProvider.credential(
-            accessToken: googleAuth?.accessToken,
-            idToken: googleAuth?.idToken,
-          );
+          //* 2nd When user clicks on the Pop Google Account then this code retirve the GoogleSignInTokenData (accesToken/IdToken)
+          final GoogleSignInAuthentication? googleAuth =
+              await googleUser?.authentication;
 
-          //* 4th This code help user to singIn/SingUp the user with Google Account.
-          // when user click on the Popup google id's then this code will return all the User google account information
-          // (Info like : Google account user name, user IMG, user email is verfied etc)
-          UserCredential userCredential =
-              await _auth.signInWithCredential(credential);
-
-          //* 5th stroing user info inside the FireStore "users" collection.
-          // ? Try & catch block for storing user info at Firestore in "users" collections
-          try {
-            // creating "users" collection so we can store user specific user data
-            await _db.collection("users").doc(_auth.currentUser!.uid).set({
-              "name": userCredential.additionalUserInfo!.profile!["name"],
-              "userName": "empty",
-              "email": userCredential.additionalUserInfo!.profile!["email"],
-              "phoneNumber": "empty",
-              "imageUrl":
-                  userCredential.additionalUserInfo!.profile!["picture"],
-              "provider": "Google",
-              "userID": _auth.currentUser!.uid,
-            }).then((value) {
-              debugPrint("User data saved in Firestore users collection");
-            }).catchError((error) {
-              debugPrint("User data not saved!");
-            });
-
-            // fetching current userId info from "users" collection.
-            final currentUserInfo =
-                await _db.collection("users").doc(_auth.currentUser!.uid).get();
-
-            final userData = currentUserInfo.data();
-
-            // creating instace of Shared Preferences.
-            final SharedPreferences prefs =
-                await SharedPreferences.getInstance();
-
-            //* 6th writing current User info data to SharedPreferences.
-            await prefs.setString("name", userData!["name"]);
-            await prefs.setString("userName", userData["userName"]);
-            await prefs.setString("email", userData["email"]);
-            await prefs.setString("phoneNumber", userData["phoneNumber"]);
-            await prefs.setString("imageUrl", userData["imageUrl"]);
-            await prefs.setString("provider", userData["provider"]);
-            await prefs.setString("userID", userData["userID"]);
-
-            //* 7th setting isLogin to "true"
-            await prefs.setBool('isLogin', true);
+          // if accessToken or idToken null the return nothing. ( accessToken get null when user dismis the Google account Pop Menu)
+          if (googleAuth?.accessToken == null && googleAuth?.idToken == null) {
+            return;
           }
+          // if accessToken and idToken is not null only then we process to login
+          else {
+            //* 3rd In upper code (2nd code ) we are ritrieving the "GoogleSignInTokenData" Instance (googleAuth) now with the help googleAuth instance we gonna
+            //* retrive the "accessToken" and idToken
+            final credential = GoogleAuthProvider.credential(
+              accessToken: googleAuth?.accessToken,
+              idToken: googleAuth?.idToken,
+            );
 
-          //? Handling Excetion for Storing user info at FireStore DB.
-          on FirebaseAuthException catch (error) {
-            if (error.message ==
-                    "A network error (such as timeout, interrupted connection or unreachable host) has occurred." &&
-                context.mounted) {
-              SnackBars.normalSnackBar(context, "Please turn on your Internet");
-            } else {
-              if (context.mounted) {
-                SnackBars.normalSnackBar(context, error.message!);
+            //* 4th This code help user to singIn/SingUp the user with Google Account.
+            // when user click on the Popup google id's then this code will return all the User google account information
+            // (Info like : Google account user name, user IMG, user email is verfied etc)
+            UserCredential userCredential =
+                await _auth.signInWithCredential(credential);
+
+            //* 5th stroing user info inside the FireStore "users" collection.
+            // ? Try & catch block for storing user info at Firestore in "users" collections
+            try {
+              // creating "users" collection so we can store user specific user data
+              await _db.collection("users").doc(_auth.currentUser!.uid).set({
+                "name": userCredential.additionalUserInfo!.profile!["name"],
+                "userName": "empty",
+                "email": userCredential.additionalUserInfo!.profile!["email"],
+                "phoneNumber": "empty",
+                "imageUrl":
+                    userCredential.additionalUserInfo!.profile!["picture"],
+                "provider": "Google",
+                "userID": _auth.currentUser!.uid,
+              }).then((value) {
+                debugPrint("User data saved in Firestore users collection");
+              }).catchError((error) {
+                debugPrint("User data not saved!");
+              });
+
+              // fetching current userId info from "users" collection.
+              final currentUserInfo = await _db
+                  .collection("users")
+                  .doc(_auth.currentUser!.uid)
+                  .get();
+
+              final userData = currentUserInfo.data();
+
+              // creating instace of Shared Preferences.
+              final SharedPreferences prefs =
+                  await SharedPreferences.getInstance();
+
+              //* 6th writing current User info data to SharedPreferences.
+              await prefs.setString("name", userData!["name"]);
+              await prefs.setString("userName", userData["userName"]);
+              await prefs.setString("email", userData["email"]);
+              await prefs.setString("phoneNumber", userData["phoneNumber"]);
+              await prefs.setString("imageUrl", userData["imageUrl"]);
+              await prefs.setString("provider", userData["provider"]);
+              await prefs.setString("userID", userData["userID"]);
+
+              //* 7th setting isLogin to "true"
+              await prefs.setBool('isLogin', true);
+            }
+
+            //? Handling Excetion for Storing user info at FireStore DB.
+            on FirebaseAuthException catch (error) {
+              if (error.message ==
+                      "A network error (such as timeout, interrupted connection or unreachable host) has occurred." &&
+                  context.mounted) {
+                SnackBars.normalSnackBar(
+                    context, "Please turn on your Internet");
+              } else {
+                if (context.mounted) {
+                  SnackBars.normalSnackBar(context, error.message!);
+                }
               }
             }
+
+            //* 8th After succresfully SingIn redirecting user to HomePage
+            if (context.mounted) {
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed("/HomePage");
+            }
+
+            // if "userCredential.additionalUserInfo!.isNewUser" is "isNewUser" it's mean user account is not presented on our firebase signin
+            // console it mean's user is being SingIn/SingUp with Google for fisrt time so we can store the information in fireStore "users" collection.
+            // This code used to detected when user login with Google Provider for first time and we can run some kind of logic on in.
+
+            // if (userCredential.additionalUserInfo!.isNewUser) {}
           }
-
-          //* 8th After succresfully SingIn redirecting user to HomePage
-          if (context.mounted) {
-            Navigator.of(context).pushNamed("/HomePage");
-          }
-
-          // if "userCredential.additionalUserInfo!.isNewUser" is "isNewUser" it's mean user account is not presented on our firebase signin
-          // console it mean's user is being SingIn/SingUp with Google for fisrt time so we can store the information in fireStore "users" collection.
-          // This code used to detected when user login with Google Provider for first time and we can run some kind of logic on in.
-
-          // if (userCredential.additionalUserInfo!.isNewUser) {}
         }
       }
     }
@@ -842,77 +864,93 @@ class FirebaseAuthMethod {
       //* and if we are web app then open Pop-Up Facebook signIn/signUp interface/UI In web browser
       final LoginResult loginResult = await FacebookAuth.instance.login();
 
-      //* 2nd When user get login after entering their login password then this code retirve the FacebookTokenData.
-      final OAuthCredential facebookAuthCredential =
-          FacebookAuthProvider.credential(loginResult.accessToken!.tokenString);
-
-      // if accessToken or idToken null the return nothing.
-      if (loginResult.accessToken == null) {
-        return;
+      if (context.mounted) {
+        ProgressIndicators.showProgressIndicator(context);
       }
-      // if accessToken and idToken is not null only then we process to login
+
+      //! if user Click on the back button while FackBook AUth Browser Popup is showing or he dismis the FaceBook Auth Browser PopUp By clicking anywhere on the screen then this under code
+      //! will pop-out the Progress Indicator.
+      if (loginResult.accessToken == null && context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      //! if User Does Nothngs and continues to Facebook Auth browser Sign In then this under code will executed.
       else {
-        //* 3rd this method singIn the user with credetial
-        final UserCredential userCredentail =
-            await _auth.signInWithCredential(facebookAuthCredential);
+        //* 2nd When user get login after entering their login password then this code retirve the FacebookTokenData.
+        final OAuthCredential facebookAuthCredential =
+            FacebookAuthProvider.credential(
+                loginResult.accessToken!.tokenString);
 
-        //* 4th stroing user info inside the FireStore "users" collection.
-        // ? Try & catch block for storing user info at Firestore in "users" collections
-        try {
-          // creating "users" collection so we can store user specific user data
-          await _db.collection("users").doc(_auth.currentUser!.uid).set({
-            "name": userCredentail.additionalUserInfo!.profile!["name"],
-            "userName": "empty",
-            "email": userCredentail.additionalUserInfo!.profile!["email"],
-            "phoneNumber": "empty",
-            "imageUrl": userCredentail.additionalUserInfo!.profile!["picture"]
-                ["data"]["url"],
-            "provider": "Facebook",
-            "userID": _auth.currentUser!.uid,
-          }).then((value) {
-            debugPrint("User data saved in Firestore users collection");
-          }).catchError((error) {
-            debugPrint("User data not saved!");
-          });
-
-          // fetching current userId info from "users" collection.
-          final currentUserInfo =
-              await _db.collection("users").doc(_auth.currentUser!.uid).get();
-
-          final userData = currentUserInfo.data();
-
-          // creating instace of Shared Preferences.
-          final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-          //* 5th writing current User info data to SharedPreferences.
-          await prefs.setString("name", userData!["name"]);
-          await prefs.setString("userName", userData["userName"]);
-          await prefs.setString("email", userData["email"]);
-          await prefs.setString("phoneNumber", userData["phoneNumber"]);
-          await prefs.setString("imageUrl", userData["imageUrl"]);
-          await prefs.setString("provider", userData["provider"]);
-          await prefs.setString("userID", userData["userID"]);
-
-          //* 6th setting isLogin to "true"
-          await prefs.setBool('isLogin', true);
+        // if accessToken or idToken null the return nothing.
+        if (loginResult.accessToken == null) {
+          return;
         }
+        // if accessToken and idToken is not null only then we process to login
+        else {
+          //* 3rd this method singIn the user with credetial
+          final UserCredential userCredentail =
+              await _auth.signInWithCredential(facebookAuthCredential);
 
-        //? Handling Excetion for Storing user info at FireStore DB.
-        on FirebaseAuthException catch (error) {
-          if (error.message ==
-                  "A network error (such as timeout, interrupted connection or unreachable host) has occurred." &&
-              context.mounted) {
-            SnackBars.normalSnackBar(context, "Please turn on your Internet");
-          } else {
-            if (context.mounted) {
-              SnackBars.normalSnackBar(context, error.message!);
+          //* 4th stroing user info inside the FireStore "users" collection.
+          // ? Try & catch block for storing user info at Firestore in "users" collections
+          try {
+            // creating "users" collection so we can store user specific user data
+            await _db.collection("users").doc(_auth.currentUser!.uid).set({
+              "name": userCredentail.additionalUserInfo!.profile!["name"],
+              "userName": "empty",
+              "email": userCredentail.additionalUserInfo!.profile!["email"],
+              "phoneNumber": "empty",
+              "imageUrl": userCredentail.additionalUserInfo!.profile!["picture"]
+                  ["data"]["url"],
+              "provider": "Facebook",
+              "userID": _auth.currentUser!.uid,
+            }).then((value) {
+              debugPrint("User data saved in Firestore users collection");
+            }).catchError((error) {
+              debugPrint("User data not saved!");
+            });
+
+            // fetching current userId info from "users" collection.
+            final currentUserInfo =
+                await _db.collection("users").doc(_auth.currentUser!.uid).get();
+
+            final userData = currentUserInfo.data();
+
+            // creating instace of Shared Preferences.
+            final SharedPreferences prefs =
+                await SharedPreferences.getInstance();
+
+            //* 5th writing current User info data to SharedPreferences.
+            await prefs.setString("name", userData!["name"]);
+            await prefs.setString("userName", userData["userName"]);
+            await prefs.setString("email", userData["email"]);
+            await prefs.setString("phoneNumber", userData["phoneNumber"]);
+            await prefs.setString("imageUrl", userData["imageUrl"]);
+            await prefs.setString("provider", userData["provider"]);
+            await prefs.setString("userID", userData["userID"]);
+
+            //* 6th setting isLogin to "true"
+            await prefs.setBool('isLogin', true);
+          }
+
+          //? Handling Excetion for Storing user info at FireStore DB.
+          on FirebaseAuthException catch (error) {
+            if (error.message ==
+                    "A network error (such as timeout, interrupted connection or unreachable host) has occurred." &&
+                context.mounted) {
+              SnackBars.normalSnackBar(context, "Please turn on your Internet");
+            } else {
+              if (context.mounted) {
+                SnackBars.normalSnackBar(context, error.message!);
+              }
             }
           }
-        }
 
-        //* 7th After succresfully SingIn redirecting user to HomePage
-        if (context.mounted) {
-          Navigator.of(context).pushNamed("/HomePage");
+          //* 7th After succresfully SingIn redirecting user to HomePage
+          if (context.mounted) {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushNamed("/HomePage");
+          }
         }
       }
     }
@@ -954,6 +992,10 @@ class FirebaseAuthMethod {
         final UserCredential userCredential =
             await FirebaseAuth.instance.signInWithPopup(twitterProvider);
 
+        if (context.mounted) {
+          ProgressIndicators.showProgressIndicator(context);
+        }
+
         //* 3rd stroing user info inside the FireStore "users" collection.
         // ? Try & catch block for storing user info at Firestore in "users" collections
         try {
@@ -1010,6 +1052,7 @@ class FirebaseAuthMethod {
 
         //* 6th After succresfully SingIn redirecting user to HomePage
         if (context.mounted) {
+          Navigator.of(context).pop();
           Navigator.of(context).pushNamed("/HomePage");
         }
       }
@@ -1024,63 +1067,78 @@ class FirebaseAuthMethod {
         final UserCredential userCredential =
             await FirebaseAuth.instance.signInWithProvider(twitterProvider);
 
-        //* 3rd stroing user info inside the FireStore "users" collection.
-        // ? Try & catch block for storing user info at Firestore in "users" collections
-        try {
-          // creating "users" collection so we can store user specific user data
-          await _db.collection("users").doc(_auth.currentUser!.uid).set({
-            "name": userCredential.additionalUserInfo!.profile!["name"],
-            "userName": "empty",
-            "email": userCredential.additionalUserInfo!.profile!["email"],
-            "phoneNumber": "empty",
-            "imageUrl": userCredential
-                .additionalUserInfo!.profile!["profile_image_url_https"],
-            "provider": "Twitter",
-            "userID": _auth.currentUser!.uid,
-          }).then((value) {
-            debugPrint("User data saved in Firestore users collection");
-          }).catchError((error) {
-            debugPrint("User data not saved!");
-          });
-
-          // fetching current userId info from "users" collection.
-          final currentUserInfo =
-              await _db.collection("users").doc(_auth.currentUser!.uid).get();
-
-          final userData = currentUserInfo.data();
-
-          // creating instace of Shared Preferences.
-          final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-          //* 4th writing current User info data to SharedPreferences.
-          await prefs.setString("name", userData!["name"]);
-          await prefs.setString("userName", userData["userName"]);
-          await prefs.setString("email", userData["email"]);
-          await prefs.setString("phoneNumber", userData["phoneNumber"]);
-          await prefs.setString("imageUrl", userData["imageUrl"]);
-          await prefs.setString("provider", userData["provider"]);
-          await prefs.setString("userID", userData["userID"]);
-
-          //* 5th setting isLogin to "true"
-          await prefs.setBool('isLogin', true);
+        if (context.mounted) {
+          ProgressIndicators.showProgressIndicator(context);
         }
 
-        //? Handling Excetion for Storing user info at FireStore DB.
-        on FirebaseAuthException catch (error) {
-          if (error.message ==
-                  "A network error (such as timeout, interrupted connection or unreachable host) has occurred." &&
-              context.mounted) {
-            SnackBars.normalSnackBar(context, "Please turn on your Internet");
-          } else {
-            if (context.mounted) {
-              SnackBars.normalSnackBar(context, error.message!);
+        //! if user Click on the back button while Twitter OAUth Popup is showing or he dismis the Twitter OAuth Pop By clicking anywhere on the screen then this under code
+        //! will pop-out the Progress Indicator.
+        if (userCredential.additionalUserInfo == null && context.mounted) {
+          Navigator.of(context).pop();
+        }
+
+        //! if User Does Nothngs and continues to Twitter O Auth Sign In then this under code will executed.
+        else {
+          //* 3rd stroing user info inside the FireStore "users" collection.
+          // ? Try & catch block for storing user info at Firestore in "users" collections
+          try {
+            // creating "users" collection so we can store user specific user data
+            await _db.collection("users").doc(_auth.currentUser!.uid).set({
+              "name": userCredential.additionalUserInfo!.profile!["name"],
+              "userName": "empty",
+              "email": userCredential.additionalUserInfo!.profile!["email"],
+              "phoneNumber": "empty",
+              "imageUrl": userCredential
+                  .additionalUserInfo!.profile!["profile_image_url_https"],
+              "provider": "Twitter",
+              "userID": _auth.currentUser!.uid,
+            }).then((value) {
+              debugPrint("User data saved in Firestore users collection");
+            }).catchError((error) {
+              debugPrint("User data not saved!");
+            });
+
+            // fetching current userId info from "users" collection.
+            final currentUserInfo =
+                await _db.collection("users").doc(_auth.currentUser!.uid).get();
+
+            final userData = currentUserInfo.data();
+
+            // creating instace of Shared Preferences.
+            final SharedPreferences prefs =
+                await SharedPreferences.getInstance();
+
+            //* 4th writing current User info data to SharedPreferences.
+            await prefs.setString("name", userData!["name"]);
+            await prefs.setString("userName", userData["userName"]);
+            await prefs.setString("email", userData["email"]);
+            await prefs.setString("phoneNumber", userData["phoneNumber"]);
+            await prefs.setString("imageUrl", userData["imageUrl"]);
+            await prefs.setString("provider", userData["provider"]);
+            await prefs.setString("userID", userData["userID"]);
+
+            //* 5th setting isLogin to "true"
+            await prefs.setBool('isLogin', true);
+          }
+
+          //? Handling Excetion for Storing user info at FireStore DB.
+          on FirebaseAuthException catch (error) {
+            if (error.message ==
+                    "A network error (such as timeout, interrupted connection or unreachable host) has occurred." &&
+                context.mounted) {
+              SnackBars.normalSnackBar(context, "Please turn on your Internet");
+            } else {
+              if (context.mounted) {
+                SnackBars.normalSnackBar(context, error.message!);
+              }
             }
           }
-        }
 
-        //* 6th After succresfully SingIn redirecting user to HomePage
-        if (context.mounted) {
-          Navigator.of(context).pushNamed("/HomePage");
+          //* 6th After succresfully SingIn redirecting user to HomePage
+          if (context.mounted) {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushNamed("/HomePage");
+          }
         }
       }
     }
@@ -1117,6 +1175,10 @@ class FirebaseAuthMethod {
         final UserCredential userCredential =
             await _auth.signInWithPopup(githubProvider);
 
+        if (context.mounted) {
+          ProgressIndicators.showProgressIndicator(context);
+        }
+
         //! Method that fetch the user's Email by AccessToken by useing GitHub Api
         //! (The reasone for fetching email by AccessToken becuase "userCredential" is returning "email == null"
         //!  I don't know the exact reasone.)
@@ -1186,6 +1248,7 @@ class FirebaseAuthMethod {
 
         //* 6th After succresfully SingIn redirecting user to HomePage
         if (context.mounted) {
+          Navigator.of(context).pop();
           Navigator.of(context).pushNamed("/HomePage");
         }
       }
@@ -1202,76 +1265,91 @@ class FirebaseAuthMethod {
         final UserCredential userCredential =
             await _auth.signInWithProvider(githubProvider);
 
-        //! Method that fetch the user's Email by AccessToken by useing GitHub Api
-        //! (The reasone for fetching email by AccessToken becuase "userCredential" is returning "email == null"
-        //!  I don't know the exact reasone.)
-        final url = Uri.https('api.github.com', 'user/emails');
-        final response = await http.get(url, headers: {
-          'Accept-Language': 'en-us',
-          'Accept': 'application/json',
-          'Authorization': 'token ${userCredential.credential!.accessToken}',
-          'Accept-Encoding': 'gzip, deflate'
-        });
+        if (context.mounted) {
+          ProgressIndicators.showProgressIndicator(context);
+        }
 
-        final mapData = jsonDecode(response.body);
+        //! if user Click on the back button while Github OAUth Popup is showing or he dismis the Github OAuth Pop By clicking anywhere on the screen then this under code
+        //! will pop-out the Progress Indicator.
+        if (userCredential.additionalUserInfo == null && context.mounted) {
+          Navigator.of(context).pop();
+        }
 
-        //* 3rd stroing user info inside the FireStore "users" collection.
-        // ? Try & catch block for storing user info at Firestore in "users" collections
-        try {
-          // creating "users" collection so we can store user specific user data
-          await _db.collection("users").doc(_auth.currentUser!.uid).set({
-            "name": userCredential.additionalUserInfo!.profile!["name"],
-            "userName": "empty",
-            "email": mapData[0]["email"],
-            "phoneNumber": "empty",
-            "imageUrl":
-                userCredential.additionalUserInfo!.profile!["avatar_url"],
-            "provider": "GitHub",
-            "userID": _auth.currentUser!.uid,
-          }).then((value) {
-            debugPrint("User data saved in Firestore users collection");
-          }).catchError((error) {
-            debugPrint("User data not saved!");
+        //! if User Does Nothngs and continues to Github O Auth Sign In then this under code will executed.
+        else {
+          //! Method that fetch the user's Email by AccessToken by useing GitHub Api
+          //! (The reasone for fetching email by AccessToken becuase "userCredential" is returning "email == null"
+          //!  I don't know the exact reasone.)
+          final url = Uri.https('api.github.com', 'user/emails');
+          final response = await http.get(url, headers: {
+            'Accept-Language': 'en-us',
+            'Accept': 'application/json',
+            'Authorization': 'token ${userCredential.credential!.accessToken}',
+            'Accept-Encoding': 'gzip, deflate'
           });
 
-          // fetching current userId info from "users" collection.
-          final currentUserInfo =
-              await _db.collection("users").doc(_auth.currentUser!.uid).get();
+          final mapData = jsonDecode(response.body);
 
-          final userData = currentUserInfo.data();
+          //* 3rd stroing user info inside the FireStore "users" collection.
+          // ? Try & catch block for storing user info at Firestore in "users" collections
+          try {
+            // creating "users" collection so we can store user specific user data
+            await _db.collection("users").doc(_auth.currentUser!.uid).set({
+              "name": userCredential.additionalUserInfo!.profile!["name"],
+              "userName": "empty",
+              "email": mapData[0]["email"],
+              "phoneNumber": "empty",
+              "imageUrl":
+                  userCredential.additionalUserInfo!.profile!["avatar_url"],
+              "provider": "GitHub",
+              "userID": _auth.currentUser!.uid,
+            }).then((value) {
+              debugPrint("User data saved in Firestore users collection");
+            }).catchError((error) {
+              debugPrint("User data not saved!");
+            });
 
-          // creating instace of Shared Preferences.
-          final SharedPreferences prefs = await SharedPreferences.getInstance();
+            // fetching current userId info from "users" collection.
+            final currentUserInfo =
+                await _db.collection("users").doc(_auth.currentUser!.uid).get();
 
-          //* 4th writing current User info data to SharedPreferences.
-          await prefs.setString("name", userData!["name"]);
-          await prefs.setString("userName", userData["userName"]);
-          await prefs.setString("email", userData["email"]);
-          await prefs.setString("phoneNumber", userData["phoneNumber"]);
-          await prefs.setString("imageUrl", userData["imageUrl"]);
-          await prefs.setString("provider", userData["provider"]);
-          await prefs.setString("userID", userData["userID"]);
+            final userData = currentUserInfo.data();
 
-          //* 5th setting isLogin to "true"
-          await prefs.setBool('isLogin', true);
-        }
+            // creating instace of Shared Preferences.
+            final SharedPreferences prefs =
+                await SharedPreferences.getInstance();
 
-        //? Handling Excetion for Storing user info at FireStore DB.
-        on FirebaseAuthException catch (error) {
-          if (error.message ==
-                  "A network error (such as timeout, interrupted connection or unreachable host) has occurred." &&
-              context.mounted) {
-            SnackBars.normalSnackBar(context, "Please turn on your Internet");
-          } else {
-            if (context.mounted) {
-              SnackBars.normalSnackBar(context, error.message!);
+            //* 4th writing current User info data to SharedPreferences.
+            await prefs.setString("name", userData!["name"]);
+            await prefs.setString("userName", userData["userName"]);
+            await prefs.setString("email", userData["email"]);
+            await prefs.setString("phoneNumber", userData["phoneNumber"]);
+            await prefs.setString("imageUrl", userData["imageUrl"]);
+            await prefs.setString("provider", userData["provider"]);
+            await prefs.setString("userID", userData["userID"]);
+
+            //* 5th setting isLogin to "true"
+            await prefs.setBool('isLogin', true);
+          }
+
+          //? Handling Excetion for Storing user info at FireStore DB.
+          on FirebaseAuthException catch (error) {
+            if (error.message ==
+                    "A network error (such as timeout, interrupted connection or unreachable host) has occurred." &&
+                context.mounted) {
+              SnackBars.normalSnackBar(context, "Please turn on your Internet");
+            } else {
+              if (context.mounted) {
+                SnackBars.normalSnackBar(context, error.message!);
+              }
             }
           }
-        }
 
-        //* 6th After succresfully SingIn redirecting user to HomePage
-        if (context.mounted) {
-          Navigator.of(context).pushNamed("/HomePage");
+          //* 6th After succresfully SingIn redirecting user to HomePage
+          if (context.mounted) {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushNamed("/HomePage");
+          }
         }
       }
     }
@@ -1297,65 +1375,77 @@ class FirebaseAuthMethod {
   static Future<void> singInAnonymously({required BuildContext context}) async {
     try {
       //* 1st This method singIn user Anonymously
-      await _auth.signInAnonymously();
+      final userCredential = await _auth.signInAnonymously();
 
-      //* 2th stroing user info inside the FireStore "users" collection.
-      // ? Try & catch block for storing user info at Firestore in "users" collections
-      try {
-        // creating "users" collection so we can store user specific user data
-        await _db.collection("users").doc(_auth.currentUser!.uid).set({
-          "name": "Anonymous",
-          "userName": "empty",
-          "email": "empty",
-          "phoneNumber": "empty",
-          "imageUrl":
-              "https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg",
-          "provider": "Anonymous",
-          "userID": _auth.currentUser!.uid,
-        }).then((value) {
-          debugPrint("User data saved in Firestore users collection");
-        }).catchError((error) {
-          debugPrint("User data not saved!");
-        });
-
-        // fetching current userId info from "users" collection.
-        final currentUserInfo =
-            await _db.collection("users").doc(_auth.currentUser!.uid).get();
-
-        final userData = currentUserInfo.data();
-
-        // creating instace of Shared Preferences.
-        final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-        //* 3rd writing current User info data to SharedPreferences.
-        await prefs.setString("name", userData!["name"]);
-        await prefs.setString("userName", userData["userName"]);
-        await prefs.setString("email", userData["email"]);
-        await prefs.setString("phoneNumber", userData["phoneNumber"]);
-        await prefs.setString("imageUrl", userData["imageUrl"]);
-        await prefs.setString("provider", userData["provider"]);
-        await prefs.setString("userID", userData["userID"]);
-
-        //* 4th setting isLogin to "true"
-        await prefs.setBool('isLogin', true);
+      if (context.mounted) {
+        ProgressIndicators.showProgressIndicator(context);
       }
 
-      //? Handling Excetion for Storing user info at FireStore DB.
-      on FirebaseAuthException catch (error) {
-        if (error.message ==
-                "A network error (such as timeout, interrupted connection or unreachable host) has occurred." &&
-            context.mounted) {
-          SnackBars.normalSnackBar(context, "Please turn on your Internet");
-        } else {
-          if (context.mounted) {
-            SnackBars.normalSnackBar(context, error.message!);
+      //! if user Click on the back button while Anonymous signIn/SignUp then this under line of code will pop-out the Progress Indicator.
+      if (userCredential.additionalUserInfo == null && context.mounted) {
+        Navigator.of(context).pop();
+      }
+      //! if User Does Nothngs and continues to Anonymous signIn/SignUp then this under code will executed.
+      else {
+        //* 2th stroing user info inside the FireStore "users" collection.
+        // ? Try & catch block for storing user info at Firestore in "users" collections
+        try {
+          // creating "users" collection so we can store user specific user data
+          await _db.collection("users").doc(_auth.currentUser!.uid).set({
+            "name": "Anonymous",
+            "userName": "empty",
+            "email": "empty",
+            "phoneNumber": "empty",
+            "imageUrl":
+                "https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg",
+            "provider": "Anonymous",
+            "userID": _auth.currentUser!.uid,
+          }).then((value) {
+            debugPrint("User data saved in Firestore users collection");
+          }).catchError((error) {
+            debugPrint("User data not saved!");
+          });
+
+          // fetching current userId info from "users" collection.
+          final currentUserInfo =
+              await _db.collection("users").doc(_auth.currentUser!.uid).get();
+
+          final userData = currentUserInfo.data();
+
+          // creating instace of Shared Preferences.
+          final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+          //* 3rd writing current User info data to SharedPreferences.
+          await prefs.setString("name", userData!["name"]);
+          await prefs.setString("userName", userData["userName"]);
+          await prefs.setString("email", userData["email"]);
+          await prefs.setString("phoneNumber", userData["phoneNumber"]);
+          await prefs.setString("imageUrl", userData["imageUrl"]);
+          await prefs.setString("provider", userData["provider"]);
+          await prefs.setString("userID", userData["userID"]);
+
+          //* 4th setting isLogin to "true"
+          await prefs.setBool('isLogin', true);
+        }
+
+        //? Handling Excetion for Storing user info at FireStore DB.
+        on FirebaseAuthException catch (error) {
+          if (error.message ==
+                  "A network error (such as timeout, interrupted connection or unreachable host) has occurred." &&
+              context.mounted) {
+            SnackBars.normalSnackBar(context, "Please turn on your Internet");
+          } else {
+            if (context.mounted) {
+              SnackBars.normalSnackBar(context, error.message!);
+            }
           }
         }
-      }
 
-      //* 3rd After succresfully SingIn redirecting user to HomePage
-      if (context.mounted) {
-        Navigator.of(context).pushNamed("/HomePage");
+        //* 3rd After succresfully SingIn redirecting user to HomePage
+        if (context.mounted) {
+          Navigator.of(context).pop();
+          Navigator.of(context).pushNamed("/HomePage");
+        }
       }
     }
     //? Handling Error Related Google SignIn/SignUp.

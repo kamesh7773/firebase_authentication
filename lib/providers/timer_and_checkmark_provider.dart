@@ -66,4 +66,16 @@ class TimerAndRadioButtonProvider extends ChangeNotifier {
       }
     });
   }
+
+  // Method reset the Timer & Button to default when click back button for chnage value or he/she by mistake press the back button.
+  // This method is called when user press back button in middle of filling otp on OTP Page so we have cancel the current timer and disable
+  // Resent Button again if we don't do that the timer() get overlape and timer will run very fast and resent btn will get enable even though
+  // timer is runing.
+  void resetTimerAndBtn() {
+    _timer!.cancel();
+    _emailOtpSendBtnEnable = false;
+    _forgotLinkBtbEnable = true;
+    _phoneOtpSendBtnEnable = false;
+    _duration = const Duration(seconds: 60);
+  }
 }

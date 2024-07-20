@@ -38,6 +38,7 @@ dependencies:
   provider: ^6.1.2
   connectivity_plus: ^6.0.3
   lottie: ^3.1.2
+  colored_print: ^1.0.0
   # Internationol list of Phone number package
   intl_phone_field2: ^3.3.4
   # OTP related package
@@ -51,7 +52,7 @@ dependencies:
   # local storage related package
   shared_preferences: ^2.2.3
   # our custum email OTP auth package
-  email_otp_auth: ^0.0.5
+  email_otp_auth: ^0.0.8
   # for custom loading animation
   loading_animation_widget: ^1.2.1
 
