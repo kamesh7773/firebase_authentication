@@ -47,11 +47,21 @@ class FirebaseAuthMethod {
       ProgressIndicators.showProgressIndicator(context);
       //* 1st We check if the entered email address is already present & its provider is "Email & Password" in the "users" collection by querying FireStore's "users" Collection.
       // searching for Email Address & "Email & Password" provider in "users" collection at once
+      //* try on catch() bloc not works on this code only timeout method works.
       QuerySnapshot queryForEmailAndProvider = await _db
           .collection('users')
           .where("email", isEqualTo: email)
           .where("provider", isEqualTo: "Email & Password")
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 10), onTimeout: () {
+        if (context.mounted) {
+          Navigator.of(context).pop();
+          SnackBars.normalSnackBar(
+            context,
+            "Network timeout, please try again.",
+          );
+        }
+      });
 
       // if the entered Email address already present in "users" collection and Provider is "Email & Password"
       // it's means that entered email is already have account in Fireabase.
