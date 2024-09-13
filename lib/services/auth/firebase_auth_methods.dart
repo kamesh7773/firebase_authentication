@@ -61,6 +61,7 @@ class FirebaseAuthMethod {
             "Network timeout, please try again.",
           );
         }
+        throw Exception("Network timeout, please try again.");
       });
 
       // if the entered Email address already present in "users" collection and Provider is "Email & Password"
