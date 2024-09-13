@@ -166,9 +166,7 @@ class FirebaseAuthMethod {
     try {
       ProgressIndicators.showProgressIndicator(context);
       //! Method that verify Email OTP
-      var res = await EmailOtpAuth.verifyOtp(
-        otp: emailOTP,
-      );
+      var res = await EmailOtpAuth.verifyOtp(otp: emailOTP);
 
       if (context.mounted) {
         Navigator.pop(context);

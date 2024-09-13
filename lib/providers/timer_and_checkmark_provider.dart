@@ -49,23 +49,23 @@ class TimerAndRadioButtonProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Method that for OTP Timer.
-  void startTimer() {
-    _duration = const Duration(seconds: 60);
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_duration.inSeconds > 0) {
-        _duration -= const Duration(seconds: 1);
-        notifyListeners();
-      } else {
-        timer.cancel();
-        _emailOtpSendBtnEnable = true;
-        _phoneOtpSendBtnEnable = true;
-        _forgotLinkBtbEnable = true;
-        _duration = const Duration(seconds: 60);
-        notifyListeners();
-      }
-    });
-  }
+    // Method that for OTP Timer.
+    void startTimer() {
+      _duration = const Duration(seconds: 60);
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (_duration.inSeconds > 0) {
+          _duration -= const Duration(seconds: 1);
+          notifyListeners();
+        } else {
+          timer.cancel();
+          _emailOtpSendBtnEnable = true;
+          _phoneOtpSendBtnEnable = true;
+          _forgotLinkBtbEnable = true;
+          _duration = const Duration(seconds: 60);
+          notifyListeners();
+        }
+      });
+    }
 
   // Method reset the Timer & Button to default when click back button for chnage value or he/she by mistake press the back button.
   // This method is called when user press back button in middle of filling otp on OTP Page so we have cancel the current timer and disable
