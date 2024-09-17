@@ -1494,8 +1494,8 @@ class FirebaseAuthMethod {
         // Sign out the user from google account
         GoogleSignIn().signOut();
       }
-      // This method SignOut user from all firebase auth Provider's
-      await _auth.signOut();
+        // This method SignOut user from all firebase auth Provider's
+        await _auth.signOut();
     }
     //? Handling Error Related Google SignIn/SignUp.
     on FirebaseAuthException catch (error) {
