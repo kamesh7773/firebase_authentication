@@ -87,7 +87,7 @@ class EmailOtpPageOtpPageState extends State<EmailOtpPage> {
           child: SingleChildScrollView(
             child: Form(
               key: _emailOtpTextfiledFormKey,
-              child: Column(  
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Lottie.asset(
