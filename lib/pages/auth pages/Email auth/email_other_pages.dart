@@ -96,7 +96,7 @@ class _ForgotEmailPasswordPageState extends State<ForgotEmailPasswordPage> {
   String btnText = "Sent Forgot Password Link";
 
   // resent OTP Method
-  void resentOTP() async {
+  void forgotEmailPassword() async {
     // send the fortgot passoword link
     bool result = await FirebaseAuthMethod.forgotEmailPassword(
       email: _forgotPasswordController.text,
@@ -195,7 +195,7 @@ class _ForgotEmailPasswordPageState extends State<ForgotEmailPasswordPage> {
                                   if (context
                                       .read<TimerAndRadioButtonProvider>()
                                       .forgotLinkBtbEnable) {
-                                    resentOTP();
+                                    forgotEmailPassword();
                                   }
                                   // else return nothing
                                   else {

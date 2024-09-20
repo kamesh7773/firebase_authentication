@@ -364,8 +364,8 @@ class FirebaseAuthMethod {
         }
         // Redirect user to ForgotPasswordHoldPage
         if (context.mounted) {
-          SnackBars.normalSnackBar(
-              context, "Forgot Password Link sended to your Email address");
+            SnackBars.normalSnackBar(
+                context, "Forgot Password Link sended to your Email address");
         }
 
         associatedEmail = true;
@@ -382,7 +382,7 @@ class FirebaseAuthMethod {
             "There is no associated account found with entered Email.",
           );
         }
-        associatedEmail = false;
+        
       }
     }
     // Handling forgot password auth Exceptions
